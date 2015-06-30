@@ -20,7 +20,7 @@ import signal, functools
 
 class TimeoutError(Exception):pass
 
-def timeout(seconds, error_message = "function call time out"):
+def timeout(seconds, error_message="function call time out"):
     
     def decorated(func):
         def _handle_timeout(signum, frame):
@@ -41,7 +41,7 @@ def timeout(seconds, error_message = "function call time out"):
 def connect_timeout(socket, host_port):
     return socket.connect(host_port)
 
-def sendData_mh(sock_list, host_list, data, single_host_retry = 3):
+def sendData_mh(sock_list, host_list, data, single_host_retry=3):
     """
     saver_list = [host1:port, host2:port, host3:port]
     sock_list = [some socket]
@@ -61,7 +61,7 @@ def sendData_mh(sock_list, host_list, data, single_host_retry = 3):
                     sock_list[0].settimeout(5)
                     sock_list[0].connect((host, port))
                 d = data
-                sock_list[0].sendall("%010d%s" %(len(d), d))
+                sock_list[0].sendall("%010d%s" % (len(d), d))
                 count = sock_list[0].recv(10)
                 if not count:
                     raise Exception("recv error")
@@ -76,7 +76,30 @@ def sendData_mh(sock_list, host_list, data, single_host_retry = 3):
                 sock_list[0] = None
                 retry += 1
                 
-    
+# initial status for state machine
+class STATE:
+    def __init__(self):
+        self.state = "accept"
+        self.have_read = 0
+        self.need_read = 10
+        self.have_write = 0
+        self.need_write = 0
+        self.buff_write = ""
+        self.buff_read = ""
+        # sock_obj is a object
+        self.sock_obj = ""
+
+    def printState(self):
+        if DEBUG:
+            dbgPrint('\n - current state of fd: %d' % self.sock_obj.fileno())
+            dbgPrint(" - - state: %s" % self.state)
+            dbgPrint(" - - have_read: %s" % self.have_read)
+            dbgPrint(" - - need_read: %s" % self.need_read)
+            dbgPrint(" - - have_write: %s" % self.have_write)
+            dbgPrint(" - - need_write: %s" % self.need_write)
+            dbgPrint(" - - buff_write: %s" % self.buff_write)
+            dbgPrint(" - - buff_read:  %s" % self.buff_read)
+            dbgPrint(" - - sock_obj:   %s" % self.sock_obj)
             
             
         
