@@ -45,6 +45,37 @@ class nbNetBase:
             sock_state = self.conn_state[fd]
             conn = sock_state.sock_obj
             if sock_state.need_read <= 0:
+                raise socket.error
+            one_read = conn.recv(sock_state.need_read)
+            if len(one_read) == 0:
+                raise socket.error
+            sock_state.buff_read += one_read
+            sock_state.have_read += len(one_read)
+            sock_state.need_read -= len(one_read)
+            sock_state.printState()
+            
+            if sock_state.have_read == 10:
+                header_said_need_read = int(sock_state.buffer_read)
+                if header_said_need_read <= 0:
+                    raise socket.error
+                sock_state.need_read += header_said_need_read
+                sock_state.buffer_read=""
+                sock_state.printState()
+                return "read protocol header finish start to read content"
+            elif header_said_need_read == 0:
+                return "process"
+            else:
+                return "readMore"
+            
+        except (socket.error, ValueError) , msg:
+            try:
+                if msg.error == 11:
+                    dbgPrint("11 " + msg)
+                    return "retry"
+            except:
                 pass
+            return 'closing'
+                
+                
             
     
