@@ -1,0 +1,81 @@
+
+
+from inspect import currentframe
+import socket
+import select
+import time
+from aifc import data
+
+DEBUG = True
+
+def get_linenumber():
+    cf = currentframe()
+    return str(cf.f_back.f_back.f_lineno)
+
+def dbgPrint(msg):
+    if DEBUG:
+        print get_linenumber(), msg
+        
+import signal, functools
+
+class TimeoutError(Exception):pass
+
+def timeout(seconds, error_message = "function call time out"):
+    
+    def decorated(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message);
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                signal.alarm(10)
+                return result
+        return functools.wraps(func)(wrapper)
+    return decorated
+
+
+@timeout(5)
+def connect_timeout(socket, host_port):
+    return socket.connect(host_port)
+
+def sendData_mh(sock_list, host_list, data, single_host_retry = 3):
+    """
+    saver_list = [host1:port, host2:port, host3:port]
+    sock_list = [some socket]
+          这里之所以这样,需要考虑到服务器异常情况下，可以向备服务器发送数据的情况（工程问题）
+    """
+    done = False
+    for host_port in host_list:
+        if done:
+            break
+        host, port = host_port.split(":")
+        port = int(port)
+        while retry < single_host_retry:
+            try:
+                if sock_list[0] == None:
+                    sock_list[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock_list[0].settimeout(5)
+                    sock_list[0].connect((host, port))
+                d = data
+                sock_list[0].sendall("%010d%s" %(len(d), d))
+                count = sock_list[0].recv(10)
+                if not count:
+                    raise Exception("recv error")
+                count = int(count)
+                buf = sock_list[0].recv(count)
+                if buf[:2] == "OK":
+                    retry = 0
+                    break
+                
+            except:
+                sock_list[0].close()
+                sock_list[0] = None
+                retry += 1
+                
+    
+            
+            
+        
