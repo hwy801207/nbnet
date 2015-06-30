@@ -53,6 +53,7 @@ def sendData_mh(sock_list, host_list, data, single_host_retry = 3):
             break
         host, port = host_port.split(":")
         port = int(port)
+        retry = 0
         while retry < single_host_retry:
             try:
                 if sock_list[0] == None:
