@@ -3,7 +3,6 @@ from inspect import currentframe
 import socket
 import select
 import time
-from aifc import data
 
 DEBUG = True
 
@@ -44,7 +43,7 @@ def sendData_mh(sock_list, host_list, data, single_host_retry=3):
     """
     saver_list = [host1:port, host2:port, host3:port]
     sock_list = [some socket]
-          这里之所以这样,需要考虑到服务器异常情况下，可以向备服务器发送数据的情况（工程问题）
+          锟斤拷锟斤拷之锟斤拷锟斤拷锟斤拷锟斤拷,锟斤拷要锟斤拷锟角碉拷锟斤拷锟斤拷锟斤拷锟届常锟斤拷锟斤拷拢锟斤拷锟斤拷锟斤拷虮阜锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷莸锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟解）
     """
     done = False
     for host_port in host_list:
