@@ -4,7 +4,7 @@ import socket
 import select
 import time
 
-from NbNetBase.NetUtils import dbgPrint
+from NetUtils import dbgPrint
 
 __all__ = ["nbNet", "sendData_mh"]
 
