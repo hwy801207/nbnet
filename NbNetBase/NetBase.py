@@ -30,6 +30,8 @@ class nbNetBase:
         conn.setblocking(0)
         dbgPrint("\n -- End Accept function")
         return conn
+    
+    
     def close(self, fd):
         try:
             sock = self.conn_state[fd].sock_obj
@@ -61,11 +63,11 @@ class nbNetBase:
                 sock_state.need_read += header_said_need_read
                 sock_state.buffer_read=""
                 sock_state.printState()
-                return "read protocol header finish start to read content"
+                return "readcontent"
             elif header_said_need_read == 0:
                 return "process"
             else:
-                return "readMore"
+                return "readmore"
             
         except (socket.error, ValueError) , msg:
             try:
@@ -75,6 +77,147 @@ class nbNetBase:
             except:
                 pass
             return 'closing'
+        
+        
+    def write(self, fd):
+        sock_state = self.conn_state[fd]
+        conn = sock_state.sock_obj
+        last_have_send = sock_state.have_write
+        try:
+            have_send = conn.send(sock_state.buff_write[last_have_send:])
+            sock_state.have_write += have_send
+            sock_state.need_write -= have_send
+            if sock_state.need_write == 0 and sock_state.have_write != 0:
+                sock_state.printState()
+                dbgPrint("\n write data completed!")
+                return "writecomplete"
+            else:
+                return "writemore"
+        except socket.error, msg:
+            return "closing"
+        
+    def run(self):
+        while True:
+            dbgPrint("\n -- run func loop")
+            for i in self.conn_sate.iterkeys():
+                dbgPrint("\n -- state of fd: %d" % i)
+                self.conn_sate[i].printState();
+                
+            epoll_list = self.epoll_sock.poll()
+            for fd, events in epoll_list:
+                dbgPrint("\n-- run epoll return fd: %d, event: %s" %(fd, events))
+                sock_state = self.conn_state[fd]
+                if select.EPOLLHUP & events:
+                    dbgPrint("events EPOLLHUP")
+                    sock_state.state = "closing"
+                elif select.EPOLLERR & events:
+                    dbgPrint("EPOLLERROR")
+                    sock_state.state = "closing"
+                    
+                self.state_machine(fd)
+
+    def state_machine(self, fd):
+        dbgPrint("\n-- state machine: fd %d, statue is: %s" %(fd, self.conn_state[fd].state))
+        sock_state = self.conn_state[fd]
+        self.sm[sock_state.state](fd)
+        
+class nbNet(nbNetBase):
+    def __init__(self, addr, port, logic):
+        dbgPrint("\n-- __init__: start!")
+        self.conn_state = {}
+        self.listen_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+        self.listen_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.listen_sock.bind((addr, port))
+        self.listen_sock.listen(10)
+        self.setFd(self.listen_sock)
+        self.epoll_sock = select.epoll()
+        self.epoll_sock.register(self.listen_sock, select.EPOLLIN)
+        self.logic = logic
+        self.sm = {
+                   'accept': self.accept2read,
+                   "read": self.read2process,
+                   "write":self.write2read,
+                   "process": self.process,
+                   "closing": self.close,
+                   }
+        
+    def process(self, fd):
+        sock_state = self.conn_state[fd]
+        response = self.logic(sock_state.buff_read)
+        sock_state.buff_write = "%010d%s" %(len(response), response)
+        sock_state.need_write = len(sock_state.buff_write)
+        sock_state.state = "write"
+        self.epoll_sock.modify(fd, select.EPOLLOUT)
+        sock_state.printState()
+        
+    def accept2read(self, fd):
+        conn = self.accept(fd)
+        self.epoll_sock.register(conn, select.EPOLLIN)
+        self.setFd(conn)
+        self.conn_state[conn.fileno()].state = "read"
+        dbgPrint("\n-- accept end!")
+        
+    def read2process(self, fd):
+        read_ret = ""
+        try:
+            read_ret = self.read(fd)
+        except Exception as msg:
+            dbgPrint(msg)
+            read_ret = "closing"
+            
+        if read_ret == "readcomplete":
+            self.process(fd)
+        elif read_ret == "readmore":
+            pass
+        elif read_ret == "retry":
+            pass
+        elif read_ret == "closing":
+            self.close(fd)
+            self.conn_state[fd].state = "closing"
+            self.state_machine(fd)
+        else:
+            raise Exception("impossible state returned by self.read")
+        
+    def write2read(self, fd):
+        try:
+            write_ret = self.write(fd)
+        except socket.error, msg:
+            write_ret = "closing"
+            
+        if write_ret == "writemore":
+            pass
+        elif write_ret == "writecomplete":
+            sock_state = self.conn_state[fd]
+            conn = sock_state.sock_obj
+            self.setFd(conn)
+            self.conn_state[fd].state = "read"
+            self.epoll_sock.modify(fd, select.EPOLLIN)
+        elif write_ret == "closing":
+            dbgPrint(msg)
+            self.conn_state[fd].state = "closing"
+            self.state_machine(fd)
+            
+            
+if __name__ == '__main__':
+    def logic(d_in):
+        return d_in[::-1]
+    
+    serverD = nbNet('0.0.0.0', 9076, logic)
+    serverD.run()
+    
+    
+    
+            
+        
+
+
+                
+            
+
+        
+        
+        
+                
                 
                 
             
