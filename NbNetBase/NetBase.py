@@ -3,8 +3,7 @@ from daemon import Daemon
 import socket
 import select
 import time
-import pdb
-from _abcoll import __all__
+
 from NbNetBase.NetUtils import dbgPrint
 
 __all__ = ["nbNet", "sendData_mh"]
@@ -49,6 +48,7 @@ class nbNetBase:
             if sock_state.need_read <= 0:
                 raise socket.error
             one_read = conn.recv(sock_state.need_read)
+            dbgPrint("\tread func fd %d,  one_read: %s, need_read: %d" %(fd, one_read, sock_state.need_read))
             if len(one_read) == 0:
                 raise socket.error
             sock_state.buff_read += one_read
@@ -57,18 +57,17 @@ class nbNetBase:
             sock_state.printState()
             
             if sock_state.have_read == 10:
-                header_said_need_read = int(sock_state.buffer_read)
+                header_said_need_read = int(sock_state.buff_read)
                 if header_said_need_read <= 0:
                     raise socket.error
                 sock_state.need_read += header_said_need_read
-                sock_state.buffer_read=""
+                sock_state.buff_read=""
                 sock_state.printState()
                 return "readcontent"
-            elif header_said_need_read == 0:
+            elif sock_state.need_read == 0:
                 return "process"
             else:
                 return "readmore"
-            
         except (socket.error, ValueError) , msg:
             try:
                 if msg.error == 11:
