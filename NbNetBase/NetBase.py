@@ -98,9 +98,9 @@ class nbNetBase:
     def run(self):
         while True:
             dbgPrint("\n -- run func loop")
-            for i in self.conn_sate.iterkeys():
+            for i in self.conn_state.iterkeys():
                 dbgPrint("\n -- state of fd: %d" % i)
-                self.conn_sate[i].printState();
+                self.conn_state[i].printState();
                 
             epoll_list = self.epoll_sock.poll()
             for fd, events in epoll_list:
