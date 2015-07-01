@@ -96,13 +96,13 @@ class nbNetBase:
             return "closing"
         
     def run(self):
+        epoll_list = self.epoll_sock.poll()
         while True:
             dbgPrint("\n -- run func loop")
             for i in self.conn_state.iterkeys():
                 dbgPrint("\n -- state of fd: %d" % i)
                 self.conn_state[i].printState();
                 
-            epoll_list = self.epoll_sock.poll()
             for fd, events in epoll_list:
                 dbgPrint("\n-- run epoll return fd: %d, event: %s" %(fd, events))
                 sock_state = self.conn_state[fd]
