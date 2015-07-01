@@ -164,14 +164,15 @@ class nbNet(nbNetBase):
             dbgPrint(msg)
             read_ret = "closing"
             
-        if read_ret == "readcomplete":
+        if read_ret == "process":
             self.process(fd)
+        elif read_ret == "readcontent":
+            pass
         elif read_ret == "readmore":
             pass
         elif read_ret == "retry":
             pass
         elif read_ret == "closing":
-            self.close(fd)
             self.conn_state[fd].state = "closing"
             self.state_machine(fd)
         else:
