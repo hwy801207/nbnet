@@ -1,5 +1,4 @@
-
-
+#-*- coding:utf-8 -*-
 from inspect import currentframe
 import socket
 import select

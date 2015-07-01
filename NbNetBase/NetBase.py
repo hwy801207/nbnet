@@ -1,4 +1,4 @@
-
+#-*- coding:utf-8 -*-
 from daemon import Daemon
 import socket
 import select
