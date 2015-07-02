@@ -3,8 +3,9 @@ from inspect import currentframe
 import socket
 import select
 import time
+from aifc import data
 
-DEBUG = True
+#DEBUG = True
 
 def get_linenumber():
     cf = currentframe()
@@ -43,7 +44,6 @@ def sendData_mh(sock_list, host_list, data, single_host_retry=3):
     """
     saver_list = [host1:port, host2:port, host3:port]
     sock_list = [some socket]
-          ����֮��������,��Ҫ���ǵ��������쳣����£������򱸷������������ݵ�������������⣩
     """
     done = False
     for host_port in host_list:
@@ -73,7 +73,30 @@ def sendData_mh(sock_list, host_list, data, single_host_retry=3):
                 sock_list[0].close()
                 sock_list[0] = None
                 retry += 1
-                
+ 
+def sendData(sock_l, host, port, data):               
+    retry = 0
+    while retry < 3:
+        try:
+            if sock_l[0] == None:
+                sock_l[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock_l[0].connect((host, port))
+                dbgPrint("\n-- start connect %s:%d" %(host, port))
+            d = data
+            sock_l[0].sendall("%010d%s" %(len(data), data))
+            count = sock_l[0].recv(10)
+            if not count:
+                raise Exception("recv error")
+            buf = sock_l[0].recv(int(count))
+            dbgPrint("recv data: %s" % buf)
+            if buf[:2] == "OK":
+                retry = 0
+                break
+        except:
+            sock_l[0].close()
+            sock_l[0] = None
+            retry += 1
+           
 # initial status for state machine
 class STATE:
     def __init__(self):
@@ -98,6 +121,3 @@ class STATE:
             dbgPrint(" - - buff_write: %s" % self.buff_write)
             dbgPrint(" - - buff_read:  %s" % self.buff_read)
             dbgPrint(" - - sock_obj:   %s" % self.sock_obj)
-            
-            
-        

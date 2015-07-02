@@ -27,7 +27,6 @@ class nbNetBase:
         _sock = _sock_state.sock_obj
         conn, addr = _sock.accept()
         conn.setblocking(0)
-        dbgPrint("\n -- End Accept function")
         return conn
     
     
@@ -47,7 +46,7 @@ class nbNetBase:
             conn = sock_state.sock_obj
             if sock_state.need_read <= 0:
                 raise socket.error
-            one_read = conn.recv(sock_state.need_read)
+            one_read = conn.recv(sock_state.need_read).lstrip()
             dbgPrint("\tread func fd %d,  one_read: %s, need_read: %d" %(fd, one_read, sock_state.need_read))
             if len(one_read) == 0:
                 raise socket.error
@@ -58,6 +57,7 @@ class nbNetBase:
             
             if sock_state.have_read == 10:
                 header_said_need_read = int(sock_state.buff_read)
+                print "header_said_need_read %d" % header_said_need_read
                 if header_said_need_read <= 0:
                     raise socket.error
                 sock_state.need_read += header_said_need_read
@@ -130,7 +130,7 @@ class nbNet(nbNetBase):
         self.listen_sock.listen(10)
         self.setFd(self.listen_sock)
         self.epoll_sock = select.epoll()
-        self.epoll_sock.register(self.listen_sock, select.EPOLLIN)
+        self.epoll_sock.register(self.listen_sock.fileno(), select.EPOLLIN)
         self.logic = logic
         self.sm = {
                    'accept': self.accept2read,
@@ -144,6 +144,7 @@ class nbNet(nbNetBase):
         sock_state = self.conn_state[fd]
         response = self.logic(sock_state.buff_read)
         sock_state.buff_write = "%010d%s" %(len(response), response)
+        dbgPrint("%010d%s" %(len(response), response))
         sock_state.need_write = len(sock_state.buff_write)
         sock_state.state = "write"
         self.epoll_sock.modify(fd, select.EPOLLOUT)
@@ -151,10 +152,9 @@ class nbNet(nbNetBase):
         
     def accept2read(self, fd):
         conn = self.accept(fd)
-        self.epoll_sock.register(conn, select.EPOLLIN)
+        self.epoll_sock.register(conn.fileno(), select.EPOLLIN)
         self.setFd(conn)
         self.conn_state[conn.fileno()].state = "read"
-        dbgPrint("\n-- accept end!")
         
     def read2process(self, fd):
         read_ret = ""
@@ -204,21 +204,4 @@ if __name__ == '__main__':
     
     serverD = nbNet('0.0.0.0', 9076, logic)
     serverD.run()
-    
-    
-    
-            
-        
-
-
-                
-            
-
-        
-        
-        
-                
-                
-                
-            
     
