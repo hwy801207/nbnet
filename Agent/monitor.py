@@ -6,8 +6,8 @@ import json
 
 
 class Monitor(Daemon):
-    #»ñÈ¡¼à¿ØÏî
-    def __init__(self, sock_l=None, host, port):
+    #ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½
+    def __init__(self,  host, port,sock_l=None):
         self.items = ['cpuused', 'memtotal', 'memused']
         self.logic = None
         self.sock_l[0] = sock_l 
@@ -15,14 +15,14 @@ class Monitor(Daemon):
         self.port = port
         
 
-    #°´ÕÕ¼à¿ØÏî£¬¶ÁÈ¡¼à¿ØÊý¾Ý
+    #ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½î£¬ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     def readData(self):
         data = {}
         for item in self.items:
             data[item] = self.getData(item)
         return json.dumps(data)
      
-    #·¢ËÍ¼à¿ØÊý¾Ýµ½saver£¬ saver¸ºÔð·¢ËÍ¸øÊý¾Ý¿â¸ú¸æ¾¯Ä£¿é
+    #ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½saverï¿½ï¿½ saverï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½æ¾¯Ä£ï¿½ï¿½
     def sendMonitorData(self):
         data = self.readData()
         sendData(self.sock_l, self.host, self.port, data)
