@@ -3,7 +3,6 @@ from inspect import currentframe
 import socket
 import select
 import time
-from aifc import data
 
 #DEBUG = True
 
