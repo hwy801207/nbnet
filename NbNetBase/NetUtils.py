@@ -4,7 +4,7 @@ import socket
 import select
 import time
 
-#DEBUG = True
+DEBUG = False
 
 def get_linenumber():
     cf = currentframe()
