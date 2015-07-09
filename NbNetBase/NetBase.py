@@ -87,7 +87,7 @@ class nbNetBase:
             sock_state.have_write += have_send
             sock_state.need_write -= have_send
             if sock_state.need_write == 0 and sock_state.have_write != 0:
-                sock_state.printState()
+                conn.send("0000000002OK")    #此处真坑爹啊！ 调试一天发现的问题
                 dbgPrint("\n write data completed!")
                 return "writecomplete"
             else:
