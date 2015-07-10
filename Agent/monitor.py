@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
-from NbNetBase.daemon import Daemon
-from NbNetBase.NetBase import nbNet
-from NbNetBase.NetUtils import sendData
+from netlib.daemon import Daemon
+from netlib.NetBase import nbNet
+from netlib.NetUtils import sendData
 import json
 
 
