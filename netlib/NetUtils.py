@@ -3,6 +3,7 @@ from inspect import currentframe
 import socket
 import select
 import time
+import sys
 
 DEBUG = False
 
@@ -14,6 +15,13 @@ def dbgPrint(msg):
     if DEBUG:
         print get_linenumber(), msg
         
+def get_cur_info():
+    print(sys._getframe().f_code.co_filename)
+    print(sys._getframe(0).f_code.co_name)
+    print(sys._getframe(1).f_code.co_name)
+    print(sys._getframe().f_lineno)
+
+
 import signal, functools
 
 class TimeoutError(Exception):pass

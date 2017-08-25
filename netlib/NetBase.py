@@ -87,7 +87,7 @@ class nbNetBase:
             sock_state.have_write += have_send
             sock_state.need_write -= have_send
             if sock_state.need_write == 0 and sock_state.have_write != 0:
-                conn.send("0000000002OK")    #此处真坑爹啊！ 调试一天发现的问题
+                conn.send("0000000002OK")
                 dbgPrint("\n write data completed!")
                 return "writecomplete"
             else:
@@ -200,7 +200,6 @@ class nbNet(nbNetBase):
             
 if __name__ == '__main__':
     def logic(d_in):                 #如果这个logic不返回“OK”，那么需要在libnet库里单独添加("0000000002OK")， 但是如果logic只是比如插入数据操作，那么这里返回个
-                                     #OK就不需要在libnet库里单独添加单独的0000000002OK
         return d_in[::-1]            #这个逻辑必须返回"OK"
     
     serverD = nbNet('0.0.0.0', 9076, logic)
